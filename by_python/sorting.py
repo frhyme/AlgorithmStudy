@@ -38,17 +38,26 @@ def insertion_sort(lst):
 
 
 def merge_sort(lst):
-    def merge(lst, left_idx, right_idx):
-        i = left_idx
-        j = right_idx - 1
+    def merge(lst, left_idx, pivot_idx, right_idx):
+        left_lst = lst[left_idx:pivot_idx]
+        right_lst = lst[pivot_idx:right_idx]
+        # print('left_lst:', left_lst)
+        # print('right_lst: ', right_lst)
 
-        while i < j:
-            if lst[i] > lst[j]:
-                swap(lst, i, j)
-                i += 1
-                j -= 1
+        combined_lst = list()
+
+        while len(left_lst) != 0 and len(right_lst) != 0:
+            if left_lst[0] < right_lst[0]:
+                x = left_lst.pop(0)
+                combined_lst.append(x)
             else:
-                i += 1
+                x = right_lst.pop(0)
+                combined_lst.append(x)
+        combined_lst += left_lst
+        combined_lst += right_lst
+
+        for i in range(left_idx, right_idx):
+            lst[i] = combined_lst.pop(0)
 
     merge_sort_call_stack = list()
     merge_call_stack = list()
@@ -57,15 +66,33 @@ def merge_sort(lst):
 
     while len(merge_sort_call_stack) != 0:
         left_idx, right_idx = merge_sort_call_stack.pop()
+        # print(left_idx, right_idx)
         if (right_idx - left_idx) > 1:
             pivot_idx = (left_idx + right_idx) // 2
             merge_sort_call_stack.append((left_idx, pivot_idx))
             merge_sort_call_stack.append((pivot_idx, right_idx))
-        merge_call_stack.append((left_idx, right_idx))
+        merge_call_stack.append((left_idx, pivot_idx, right_idx))
 
     while len(merge_call_stack) != 0:
-        left_idx, right_idx = merge_call_stack.pop()
-        merge(lst, left_idx, right_idx)
+        left_idx, pivot_idx, right_idx = merge_call_stack.pop()
+        # print(left_idx, pivot_idx, right_idx)
+        # print("Before: ", lst)
+        merge(lst, left_idx, pivot_idx, right_idx)
+        # print("After:  ", lst)
+
+
+def quick_sort(lst):
+    def sub_quick_sort(lst, left_idx, right_idx):
+        if (right_idx - left_idx) > 1:
+            p_idx = right_idx - 1
+            i = left_idx
+            j = p_idx - 1
+
+            while True:
+                pass
+        pass
+
+    sub_quick_sort(lst, 0, len(lst))
 
 
 def sorting_by(lst, sort_func):
@@ -79,6 +106,7 @@ if __name__ == '__main__':
     print('== sorting ')
     N = 10 ** 3
     lst = np.random.randint(0, 1000, N)
+    lst = list(lst)
     print(lst[:10])
 
     print("== basic sort")
@@ -104,9 +132,7 @@ if __name__ == '__main__':
 
     print("== merge_sort")
     lst_copy = lst.copy()
-    lst_copy.sort()
     sorting_by(lst_copy, merge_sort)
-    # print(lst_copy)
 
     for x, y in zip(benchmark_lst, lst_copy):
         if x != y:
