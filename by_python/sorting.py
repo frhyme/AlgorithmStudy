@@ -84,14 +84,35 @@ def merge_sort(lst):
 def quick_sort(lst):
     def sub_quick_sort(lst, left_idx, right_idx):
         if (right_idx - left_idx) > 1:
+            # print(left_idx, right_idx)
             p_idx = right_idx - 1
+            p_value = lst[p_idx]
             i = left_idx
             j = p_idx - 1
 
             while True:
-                pass
-        pass
+                while True:
+                    if lst[i] < p_value and i < (right_idx - 1):
+                        i = i + 1
+                    else:
+                        break
+                while True:
+                    if p_value < lst[j] and 0 <= j:
+                        j = j - 1
+                    else:
+                        break
+                # print(left_idx, right_idx)
+                # print(f"i: {i}, j: {j}")
+                if i < j:
+                    swap(lst, i, j)
+                    i = i + 1
+                    j = j - 1
+                else:
+                    swap(lst, p_idx, i)
+                    break
 
+            sub_quick_sort(lst, left_idx, i)
+            sub_quick_sort(lst, i + 1, right_idx)
     sub_quick_sort(lst, 0, len(lst))
 
 
@@ -139,6 +160,14 @@ if __name__ == '__main__':
             print("== False result")
             break
 
+    print("== quick_sort")
+    lst_copy = lst.copy()
+    sorting_by(lst_copy, quick_sort)
+    # print(lst_copy)
 
+    for x, y in zip(lst_copy, benchmark_lst):
+        if x != y:
+            print("== False")
+            break
 
 
