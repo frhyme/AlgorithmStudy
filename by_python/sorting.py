@@ -50,16 +50,22 @@ def merge_sort(lst):
             else:
                 i += 1
 
-    def sub_merge_sort(lst, left_idx, right_idx):
+    merge_sort_call_stack = list()
+    merge_call_stack = list()
+
+    merge_sort_call_stack.append((0, len(lst)))
+
+    while len(merge_sort_call_stack) != 0:
+        left_idx, right_idx = merge_sort_call_stack.pop()
         if (right_idx - left_idx) > 1:
             pivot_idx = (left_idx + right_idx) // 2
+            merge_sort_call_stack.append((left_idx, pivot_idx))
+            merge_sort_call_stack.append((pivot_idx, right_idx))
+        merge_call_stack.append((left_idx, right_idx))
 
-            sub_merge_sort(lst, left_idx, pivot_idx)
-            sub_merge_sort(lst, pivot_idx, right_idx)
-            merge(lst, left_idx, right_idx)
-
-    merge_call_stack = list()
-    sub_merge_sort(lst, 0, len(lst))
+    while len(merge_call_stack) != 0:
+        left_idx, right_idx = merge_call_stack.pop()
+        merge(lst, left_idx, right_idx)
 
 
 def sorting_by(lst, sort_func):
@@ -100,7 +106,6 @@ if __name__ == '__main__':
     lst_copy = lst.copy()
     lst_copy.sort()
     sorting_by(lst_copy, merge_sort)
-    # print(lst_copy)
     # print(lst_copy)
 
     for x, y in zip(benchmark_lst, lst_copy):
