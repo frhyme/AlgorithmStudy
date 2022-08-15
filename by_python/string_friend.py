@@ -3,10 +3,13 @@
 - timestamp 가 증가하면서 deathDate에 도달하면 해당 string은 삭제된다.
 - string이 추가될 때, 새로운 string과 consecutive character more 3, they could be friends, then new string's deathDate is going to be assigned to their friends
 - get alive strings at timstamp, with specific strLength
+
+2022-08-14 (Sun) - all strNode should be sorted by closest deathDate
+- it is better to hashMap by deathDate
+2022-08-15 (Mon) - get each node by heap
 """
 
 
-# how to fix these automatically
 class StringNode:
     def __init__(self, s: str, birthDate: int, lifeSpan: int):
         self.s = s
@@ -20,6 +23,97 @@ class StringNode:
 
     def len(self):
         return len(self.s)
+
+
+class Heap:
+    def __init__(self):
+        self.lst = list()
+        self.is_min = True
+        self.size = 0
+
+    def cmp(self, i, j):
+        if self.lst[i].deathDate < self.lst[j].deathDate:
+            return -1
+        elif self.lst[i].deathDate == self.lst[j].deathDate:
+            return 0
+        else:
+            return 1
+
+    def swap(self, i, j):
+        tmp = self.lst[i]
+        self.lst[i] = self.lst[j]
+        self.lst[j] = tmp
+
+    def get_parent(self, i: int):
+        return (i - 1) // 2
+
+    def get_left(self, i: int):
+        return (i * 2) + 1
+
+    def get_right(self, i: int):
+        return (i * 2) + 2
+
+    def push(self, sn: StringNode):
+        self.lst.append(sn)
+        self.size += 1
+
+        cursor = self.size - 1
+        p_cursor = self.get_parent(cursor)
+
+        while cursor >= 0 and p_cursor >= 0:
+            if self.cmp(cursor, p_cursor) == 1:
+                self.swap(cursor, p_cursor)
+                cursor = p_cursor
+                p_cursor = self.get_parent(cursor)
+            else:
+                break
+
+    def pop(self) -> StringNode:
+        # print('== pop')
+        r = self.lst[0]
+
+        if self.size == 1:
+            self.size -= 1
+            return r
+        elif self.size == 0:
+            return None
+        else:
+            self.swap(0, self.size - 1)
+            self.size -= 1
+
+            cursor = 0
+            l_cursor = self.get_left(cursor)
+            r_cursor = self.get_right(cursor)
+
+            while cursor < self.size and l_cursor < self.size and r_cursor < self.size:
+                # print(cursor, l_cursor, r_cursor)
+                if self.cmp(l_cursor, r_cursor) == 1:
+                    # left is small
+                    if self.cmp(cursor, l_cursor) == -1:
+                        break
+                    else:
+                        self.swap(cursor, l_cursor)
+                        cursor = l_cursor
+                else:
+                    # right is small or equal
+                    if self.cmp(cursor, r_cursor) == -1:
+                        break
+                    else:
+                        self.swap(cursor, r_cursor)
+                        cursor = r_cursor
+                l_cursor = self.get_left(cursor)
+                r_cursor = self.get_right(cursor)
+            return r
+
+    def top(self) -> StringNode:
+        return self.lst[0]
+
+    def print(self):
+        for i in range(0, self.size):
+            x = self.lst[i]
+            print(x, end=" ")
+        if self.size > 0:
+            print()
 
 
 def is_consecutive_same(s1: str, s2: str, n: int = 3):
@@ -52,6 +146,7 @@ class HashDict:
     def __init__(self):
         self.hashmap = dict()
         self.fr = Friends()
+        self.timestamp = 0
 
     def hash(self, strNode: StringNode):
         return strNode.len()
@@ -62,20 +157,24 @@ class HashDict:
     def push(self, strNode: StringNode):
         k = self.hash(strNode)
         if k not in self.hashmap.keys():
-            self.hashmap[k] = list()
-        self.hashmap[k].append(strNode)
-
-    def delete(self, strNode: StringNode):
-        k = self.hash(strNode)
-        self.hashmap[k].remove(StringNode)
+            self.hashmap[k] = Heap()
+        self.hashmap[k].push(strNode)
+        self.fr.add_friend(strNode)
 
     def print(self):
         print("== HashDict ============================")
         for k in self.hashmap.keys():
-            if len(self.hashmap[k]) != 0:
-                print(f"== key: {k}")
-                for s in self.hashmap[k]:
-                    print(s)
+            self.hashmap[k].print()
+        self.fr.print()
+
+    def tick(self):
+        self.timestamp += 1
+        print(f"== tick at timestamp: {self.timestamp}")
+
+        for k in self.hashmap.keys():
+            while self.hashmap[k].top().deathDate <= self.timestamp and self.hashmap[k].size > 0:
+                sn = self.hashmap[k].pop()
+                self.fr.del_friend(sn)
 
 
 class Friends:
@@ -115,38 +214,50 @@ class Friends:
             for _sn in self.friends_lst[friends_idx]:
                 _sn.deathDate = sn1.deathDate
 
+    def find_friends_idx(self, sn: StringNode):
+        target_idx = -1
+        for i, each_set in enumerate(self.friends_lst):
+            if sn in each_set:
+                target_idx = i
+        return target_idx
+
+    def del_friend(self, sn: StringNode):
+        target_idx = -1
+        for i, each_set in enumerate(self.friends_lst):
+            if sn in each_set:
+                target_idx = i
+        if target_idx != -1:
+            del self.friends_lst[target_idx]
+        else:
+            pass
+
     def print(self):
         print("== Friends ========================")
         for each_set in self.friends_lst:
             print(each_set)
-
-    def del_friend(self, strNode: StringNode):
-        pass
-
 
 
 if __name__ == "__main__":
     print("== This is main code")
 
     hd = HashDict()
-    fr = Friends()
+    # fr = Friends()
 
-    s_lst = ['member', 'barbeque', 'memory', 'barber']
-    b_lst = [0, 0, 0, 0]
-    l_lst = [3, 4, 5, 6]
+    s_lst = ['member', 'barbeque', 'memory', 'barber', 'abcdefg']
+    b_lst = [0, 0, 0, 0, 0, 0]
+    l_lst = [3, 4, 5, 6, 10]
 
     for s, b, l in zip(s_lst, b_lst, l_lst):
         sn = StringNode(s, b, l)
         hd.push(sn)
-        fr.add_friend(sn)
-        hd.print()
-        fr.print()
-
-
-
-
-
-
-
-
+        # hd.print()
+        # fr.print()
+    hd.tick()
+    hd.tick()
+    hd.tick()
+    hd.tick()
+    hd.tick()
+    hd.print()
+    hd.tick()
+    hd.print()
 
