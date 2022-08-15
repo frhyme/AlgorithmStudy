@@ -1,6 +1,7 @@
 import networkx as nx
 import random
 import itertools
+import time
 
 
 class Graph:
@@ -104,28 +105,123 @@ def bfs(g: nx.Graph, nid) -> list:
     return r_lst
 
 
+def shortest_path_basic(g: nx.Graph, from_n, to_n) -> dict:
+    def get_smallest_node(dest: dict, visited: dict):
+        min_idx = -1
+        for k, v in dest.items():
+            if not visited[k]:
+                if min_idx == -1:
+                    min_idx = k
+                else:
+                    if dest[k] <= dest[min_idx]:
+                        min_idx = k
+        return min_idx
+
+    INF = 10 ** 10
+    dest = dict()
+    visited = {nid: False for nid in g.nodes()}
+
+    for nid in g.nodes():
+        dest[nid] = INF
+    dest[from_n] = 0
+    # visited[from_n] = True
+
+    for _ in range(0, len(visited)):
+        now = get_smallest_node(dest, visited)
+        visited[now] = True
+
+        for nbr in nx.neighbors(g, now):
+            calc_v = dest[now] + g[now][nbr]['weight']
+            if dest[nbr] >= calc_v:
+                dest[nbr] = calc_v
+    return dest[to_n]
+
+
+def shortest_path_advanced(g: nx.Graph, from_n, to_n) -> dict:
+    class Heap:
+        def __init__(self):
+            self.lst = list()
+            self.size = 0
+
+        def cmp(self, i, j):
+            if self.lst[i][0] < self.lst[j][0]:
+                return -1
+            elif self.lst[i][0] == self.lst[j][0]:
+                return 0
+            else:
+                return 1
+
+        def push(self, x):
+            pass
+        def pop(self, x):
+            pass
+        def top(self, x):
+            return self.lst[-1]
+    def get_smallest_node(dest: dict, visited: dict):
+        min_idx = -1
+        for k, v in dest.items():
+            if not visited[k]:
+                if min_idx == -1:
+                    min_idx = k
+                else:
+                    if dest[k] <= dest[min_idx]:
+                        min_idx = k
+        return min_idx
+
+    INF = 10 ** 10
+    dest = dict()
+    visited = {nid: False for nid in g.nodes()}
+
+    for nid in g.nodes():
+        dest[nid] = INF
+    dest[from_n] = 0
+    # visited[from_n] = True
+
+    for _ in range(0, len(visited)):
+        now = get_smallest_node(dest, visited)
+        visited[now] = True
+
+        for nbr in nx.neighbors(g, now):
+            calc_v = dest[now] + g[now][nbr]['weight']
+            if dest[nbr] >= calc_v:
+                dest[nbr] = calc_v
+    return dest[to_n]
+    pass
+
+
 if __name__ == '__main__':
-    print(" == Shortest path")
+    print("== Shortest path")
     random.seed(4)
 
-    g = Graph()
+    # g = Graph()
 
-    targetG = nx.complete_graph(4)
-    targetG = nx.karate_club_graph()
-
-    # print(targetG.nodes)
+    targetG = nx.complete_graph(10)
+    # targetG = nx.karate_club_graph()
 
     for n1, n2 in targetG.edges():
         targetG[n1][n2]['weight'] = random.randint(1, 100)
 
-    if False:
-        for n1, n2 in itertools.combinations(targetG.nodes(), 2):
-            bench_l = nx.shortest_path_length(targetG, n1, n2, weight='weight')
-            print(f'{n1}, {n2} = {bench_l}')
     if True:
+        benchmark_duration = 0.0
+        my_code_duration = 0.0
+        # print('== benchmark')
+        for n1, n2 in itertools.combinations(targetG.nodes(), 2):
+            start_time = time.time()
+            bench_l = nx.shortest_path_length(targetG, n1, n2, weight='weight')
+            benchmark_duration += time.time() - start_time
+            print(f'bench: {n1}, {n2} = {bench_l}')
+
+            start_time = time.time()
+            my_l = shortest_path_basic(targetG, n1, n2)
+            my_code_duration += time.time() - start_time
+            # print(f'custom: {n1}, {n2} = {my_l}')
+            assert bench_l == my_l
+        print(f'- benchmark duration: {benchmark_duration: .5f}')
+        print(f'- my code   duration: {my_code_duration: .5f}')
+    print('== complete')
+
+    if False:
         print(dfs(targetG, 0))
         print(bfs(targetG, 0))
-
-
 
 
