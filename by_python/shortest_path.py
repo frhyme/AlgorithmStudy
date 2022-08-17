@@ -138,10 +138,27 @@ def shortest_path_basic(g: nx.Graph, from_n, to_n) -> dict:
 
 
 def shortest_path_advanced(g: nx.Graph, from_n, to_n) -> dict:
+    # print("== shortest_path_advanced")
+
     class Heap:
         def __init__(self):
             self.lst = list()
             self.size = 0
+
+        def print(self):
+            print('== heap')
+            for i in range(0, self.size):
+                print(self.lst[i], end=' ')
+            print()
+
+        def parent_idx(self, i):
+            return (i - 1) // 2
+
+        def left_child(self, i):
+            return i * 2 + 1
+
+        def right_child(self, i):
+            return i * 2 + 2
 
         def cmp(self, i, j):
             if self.lst[i][0] < self.lst[j][0]:
@@ -151,22 +168,82 @@ def shortest_path_advanced(g: nx.Graph, from_n, to_n) -> dict:
             else:
                 return 1
 
+        def swap(self, i, j):
+            tmp = self.lst[i]
+            self.lst[i] = self.lst[j]
+            self.lst[j] = tmp
+
         def push(self, x):
-            pass
-        def pop(self, x):
-            pass
-        def top(self, x):
-            return self.lst[-1]
-    def get_smallest_node(dest: dict, visited: dict):
-        min_idx = -1
-        for k, v in dest.items():
-            if not visited[k]:
-                if min_idx == -1:
-                    min_idx = k
+            # 2022.08.18 - frhyme - do not use append method when you implement heap
+            # the actual size of heap and the allocated size of the lst might be different
+            # Therefore, the last element which was indicated by the hash.size might be different withe the last element which was appended recently
+            if len(self.lst) > self.size:
+                self.lst[self.size] = x
+            else:
+                self.lst.append(x)
+            self.size += 1
+
+            cursor = self.size - 1
+            p_cursor = self.parent_idx(cursor)
+
+            while cursor >= 0 and p_cursor >= 0:
+                if self.cmp(cursor, p_cursor) == -1:
+                    # cursor is smaller than p_cursor
+                    self.swap(cursor, p_cursor)
+                    cursor = p_cursor
+                    p_cursor = self.parent_idx(cursor)
                 else:
-                    if dest[k] <= dest[min_idx]:
-                        min_idx = k
-        return min_idx
+                    break
+
+        def pop(self):
+            if self.size == 0:
+                return None
+            else:
+                r_v = self.lst[0]
+                self.swap(0, self.size - 1)
+                self.size -= 1
+
+                cursor = 0
+
+                while cursor < self.size:
+                    left = self.left_child(cursor)
+                    right = self.right_child(cursor)
+
+                    if left < self.size:
+                        if right < self.size:
+                            # both exists
+                            if self.cmp(left, right) == -1:
+                                # left smaller
+                                if self.cmp(cursor, left) == 1:
+                                    self.swap(cursor, left)
+                                    cursor = left
+                                else:
+                                    break
+                            else:
+                                # right smaller
+                                if self.cmp(cursor, right) == 1:
+                                    self.swap(cursor, right)
+                                    cursor = right
+                                else:
+                                    break
+                        else:
+                            # only left exist
+                            if self.cmp(cursor, left) == 1:
+                                self.swap(cursor, left)
+                                cursor = left
+                            else:
+                                break
+                    else:
+                        # both not exist
+                        break
+                return r_v
+
+        def top(self):
+            return self.lst[0]
+    # Heap Definition done =================
+    # Function Definition done ==============
+
+    hp = Heap()
 
     INF = 10 ** 10
     dest = dict()
@@ -176,17 +253,25 @@ def shortest_path_advanced(g: nx.Graph, from_n, to_n) -> dict:
         dest[nid] = INF
     dest[from_n] = 0
     # visited[from_n] = True
+    hp.push((dest[from_n], from_n))
 
-    for _ in range(0, len(visited)):
-        now = get_smallest_node(dest, visited)
-        visited[now] = True
+    while hp.size > 0:
+        l, now = hp.pop()
+        # print(f"pop: {l}, {now}")
+
+        if visited[now]:
+            continue
+        else:
+            visited[now] = True
 
         for nbr in nx.neighbors(g, now):
             calc_v = dest[now] + g[now][nbr]['weight']
-            if dest[nbr] >= calc_v:
+            # print(f"nbr: {nbr}, {calc_v}")
+            if dest[nbr] > calc_v:
                 dest[nbr] = calc_v
+                hp.push((calc_v, nbr))
+
     return dest[to_n]
-    pass
 
 
 if __name__ == '__main__':
@@ -195,7 +280,7 @@ if __name__ == '__main__':
 
     # g = Graph()
 
-    targetG = nx.complete_graph(10)
+    targetG = nx.complete_graph(15)
     # targetG = nx.karate_club_graph()
 
     for n1, n2 in targetG.edges():
@@ -204,20 +289,29 @@ if __name__ == '__main__':
     if True:
         benchmark_duration = 0.0
         my_code_duration = 0.0
+        my_adv_code_duration = 0.0
         # print('== benchmark')
         for n1, n2 in itertools.combinations(targetG.nodes(), 2):
             start_time = time.time()
             bench_l = nx.shortest_path_length(targetG, n1, n2, weight='weight')
             benchmark_duration += time.time() - start_time
-            print(f'bench: {n1}, {n2} = {bench_l}')
 
             start_time = time.time()
             my_l = shortest_path_basic(targetG, n1, n2)
             my_code_duration += time.time() - start_time
             # print(f'custom: {n1}, {n2} = {my_l}')
             assert bench_l == my_l
-        print(f'- benchmark duration: {benchmark_duration: .5f}')
-        print(f'- my code   duration: {my_code_duration: .5f}')
+
+            # print("- adv")
+            start_time = time.time()
+            my_l = shortest_path_advanced(targetG, n1, n2)
+            my_adv_code_duration += time.time() - start_time
+            assert bench_l == my_l
+
+        print(f'- benchmark   duration: {benchmark_duration: .5f}')
+        print(f'- my code     duration: {my_code_duration: .5f}')
+        print(f'- my adv code duration: {my_adv_code_duration: .5f}')
+
     print('== complete')
 
     if False:
