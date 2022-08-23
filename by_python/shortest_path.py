@@ -3,6 +3,12 @@ import random
 import itertools
 import time
 
+"""
+TO DO LIST:
+2022.08.23 - frhyme
+- shortest path by Heap should be faster than shortest path basic.
+But, in my python code the method with Heap is much slower than basic method.
+"""
 
 class Graph:
     def __init__(self):
@@ -136,111 +142,111 @@ def shortest_path_basic(g: nx.Graph, from_n, to_n) -> dict:
                 dest[nbr] = calc_v
     return dest[to_n]
 
+class Heap:
+    def __init__(self):
+        self.lst = list()
+        self.size = 0
 
-def shortest_path_advanced(g: nx.Graph, from_n, to_n) -> dict:
-    # print("== shortest_path_advanced")
+    def print(self):
+        print('== heap')
+        for i in range(0, self.size):
+            print(self.lst[i], end=' ')
+        print()
 
-    class Heap:
-        def __init__(self):
-            self.lst = list()
-            self.size = 0
+    def parent_idx(self, i):
+        return (i - 1) // 2
 
-        def print(self):
-            print('== heap')
-            for i in range(0, self.size):
-                print(self.lst[i], end=' ')
-            print()
+    def left_child(self, i):
+        return i * 2 + 1
 
-        def parent_idx(self, i):
-            return (i - 1) // 2
+    def right_child(self, i):
+        return i * 2 + 2
 
-        def left_child(self, i):
-            return i * 2 + 1
+    def cmp(self, i, j):
+        if self.lst[i][0] < self.lst[j][0]:
+            return -1
+        elif self.lst[i][0] == self.lst[j][0]:
+            return 0
+        else:
+            return 1
 
-        def right_child(self, i):
-            return i * 2 + 2
+    def swap(self, i, j):
+        tmp = self.lst[i]
+        self.lst[i] = self.lst[j]
+        self.lst[j] = tmp
 
-        def cmp(self, i, j):
-            if self.lst[i][0] < self.lst[j][0]:
-                return -1
-            elif self.lst[i][0] == self.lst[j][0]:
-                return 0
+    def push(self, x):
+        # 2022.08.18 - frhyme - do not use append method when you implement heap
+        # the actual size of heap and the allocated size of the lst might be different
+        # Therefore, the last element which was indicated by the hash.size might be different withe the last element which was appended recently
+        if len(self.lst) > self.size:
+            self.lst[self.size] = x
+        else:
+            self.lst.append(x)
+        self.size += 1
+
+        cursor = self.size - 1
+        p_cursor = self.parent_idx(cursor)
+
+        while cursor >= 0 and p_cursor >= 0:
+            if self.cmp(cursor, p_cursor) == -1:
+                # cursor is smaller than p_cursor
+                self.swap(cursor, p_cursor)
+                cursor = p_cursor
+                p_cursor = self.parent_idx(cursor)
             else:
-                return 1
+                break
 
-        def swap(self, i, j):
-            tmp = self.lst[i]
-            self.lst[i] = self.lst[j]
-            self.lst[j] = tmp
+    def pop(self):
+        if self.size == 0:
+            return None
+        else:
+            r_v = self.lst[0]
+            self.swap(0, self.size - 1)
+            self.size -= 1
 
-        def push(self, x):
-            # 2022.08.18 - frhyme - do not use append method when you implement heap
-            # the actual size of heap and the allocated size of the lst might be different
-            # Therefore, the last element which was indicated by the hash.size might be different withe the last element which was appended recently
-            if len(self.lst) > self.size:
-                self.lst[self.size] = x
-            else:
-                self.lst.append(x)
-            self.size += 1
+            cursor = 0
 
-            cursor = self.size - 1
-            p_cursor = self.parent_idx(cursor)
+            while cursor < self.size:
+                left = self.left_child(cursor)
+                right = self.right_child(cursor)
 
-            while cursor >= 0 and p_cursor >= 0:
-                if self.cmp(cursor, p_cursor) == -1:
-                    # cursor is smaller than p_cursor
-                    self.swap(cursor, p_cursor)
-                    cursor = p_cursor
-                    p_cursor = self.parent_idx(cursor)
-                else:
-                    break
-
-        def pop(self):
-            if self.size == 0:
-                return None
-            else:
-                r_v = self.lst[0]
-                self.swap(0, self.size - 1)
-                self.size -= 1
-
-                cursor = 0
-
-                while cursor < self.size:
-                    left = self.left_child(cursor)
-                    right = self.right_child(cursor)
-
-                    if left < self.size:
-                        if right < self.size:
-                            # both exists
-                            if self.cmp(left, right) == -1:
-                                # left smaller
-                                if self.cmp(cursor, left) == 1:
-                                    self.swap(cursor, left)
-                                    cursor = left
-                                else:
-                                    break
-                            else:
-                                # right smaller
-                                if self.cmp(cursor, right) == 1:
-                                    self.swap(cursor, right)
-                                    cursor = right
-                                else:
-                                    break
-                        else:
-                            # only left exist
+                if left < self.size:
+                    if right < self.size:
+                        # both exists
+                        if self.cmp(left, right) == -1:
+                            # left smaller
                             if self.cmp(cursor, left) == 1:
                                 self.swap(cursor, left)
                                 cursor = left
                             else:
                                 break
+                        else:
+                            # right smaller
+                            if self.cmp(cursor, right) == 1:
+                                self.swap(cursor, right)
+                                cursor = right
+                            else:
+                                break
                     else:
-                        # both not exist
-                        break
-                return r_v
+                        # only left exist
+                        if self.cmp(cursor, left) == 1:
+                            self.swap(cursor, left)
+                            cursor = left
+                        else:
+                            break
+                else:
+                    # both not exist
+                    break
+            return r_v
 
-        def top(self):
-            return self.lst[0]
-    # Heap Definition done =================
+    def top(self):
+        return self.lst[0]
+# Heap Definition done =================
+
+
+def shortest_path_advanced(g: nx.Graph, from_n, to_n) -> dict:
+    # print("== shortest_path_advanced")
     # Function Definition done ==============
 
     hp = Heap()
@@ -280,8 +286,8 @@ if __name__ == '__main__':
 
     # g = Graph()
 
-    targetG = nx.complete_graph(15)
-    # targetG = nx.karate_club_graph()
+    targetG = nx.complete_graph(20)
+    targetG = nx.karate_club_graph()
 
     for n1, n2 in targetG.edges():
         targetG[n1][n2]['weight'] = random.randint(1, 100)
@@ -308,9 +314,9 @@ if __name__ == '__main__':
             my_adv_code_duration += time.time() - start_time
             assert bench_l == my_l
 
-        print(f'- benchmark   duration: {benchmark_duration: .5f}')
-        print(f'- my code     duration: {my_code_duration: .5f}')
-        print(f'- my adv code duration: {my_adv_code_duration: .5f}')
+        print(f'- benchmark     duration: {benchmark_duration: .5f}')
+        print(f'- my basic code duration: {my_code_duration: .5f}')
+        print(f'- my adv code   duration: {my_adv_code_duration: .5f}')
 
     print('== complete')
 
