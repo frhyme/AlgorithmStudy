@@ -1,9 +1,11 @@
 import time
 import numpy as np
 
-
 """
 2022.08.06 - sng_hn.lee
+- fastest sort(quick sort) still 10 time slower then default sort
+why it happenend? because default python sorting algorithm is Tim Sort which means hybrid method of both insertion and merge sort
+https://en.wikipedia.org/wiki/Timsort
 """
 
 
@@ -116,6 +118,14 @@ def quick_sort(lst):
     sub_quick_sort(lst, 0, len(lst))
 
 
+def tim_sort(lst):
+    """
+    2022.08.07 - frhyme - Init
+    https://en.wikipedia.org/wiki/Timsort
+    """
+    pass
+
+
 def sorting_by(lst, sort_func):
     start_time = time.time()
     sort_func(lst)
@@ -124,6 +134,22 @@ def sorting_by(lst, sort_func):
 
 
 if __name__ == '__main__':
+    """
+    == sorting
+    [438, 713, 576, 101, 961, 553, 79, 366, 706, 980]
+    == basic sort
+    elapsed_time:  2.522e-04 seconds
+    == bubble_sort
+    elapsed_time:  6.274e-02 seconds
+    == selection_sort
+    elapsed_time:  3.727e-02 seconds
+    == insertion_sort
+    elapsed_time:  1.260e-02 seconds
+    == merge_sort
+    elapsed_time:  7.181e-03 seconds
+    == quick_sort
+    elapsed_time:  2.312e-03 seconds
+    """
     print('== sorting ')
     N = 10 ** 3
     lst = np.random.randint(0, 1000, N)
@@ -169,5 +195,3 @@ if __name__ == '__main__':
         if x != y:
             print("== False")
             break
-
-
