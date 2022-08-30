@@ -10,6 +10,7 @@ TO DO LIST:
 But, in my python code the method with Heap is much slower than basic method.
 """
 
+
 class Graph:
     def __init__(self):
         self.nodes = set()
@@ -141,6 +142,7 @@ def shortest_path_basic(g: nx.Graph, from_n, to_n) -> dict:
             if dest[nbr] >= calc_v:
                 dest[nbr] = calc_v
     return dest[to_n]
+
 
 class Heap:
     def __init__(self):
@@ -323,5 +325,3 @@ if __name__ == '__main__':
     if False:
         print(dfs(targetG, 0))
         print(bfs(targetG, 0))
-
-

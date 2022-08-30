@@ -39,6 +39,55 @@ def insertion_sort(lst):
                     swap(lst, i, j)
 
 
+def binary_insertion_sort(xs: list):
+    """
+    2022.08.5
+    """
+    def binary_search(lst: list, n_open: int, pivot: int) -> int:
+        """
+        2022.08.30 - frhyme - Init
+        """
+        left, right = 0, n_open
+        cursor = (left + right) // 2
+
+        while left >= 0 and right >= 0 and cursor >= 0:
+            if lst[cursor] < pivot:
+                # to the right
+                left = cursor + 1
+                cursor = (left + right) // 2
+            elif lst[cursor] > pivot:
+                # to the left
+                right = cursor - 1
+                cursor = (left + right) // 2
+
+            if cursor == left or cursor == right:
+                return cursor
+    # Function Definition Done ========================
+    lst = [1, 2, 3, 8]
+
+    for x in range(1, 10):
+        b_idx = binary_search(lst, len(lst), x)
+        # print(f"b_idx of {x}: {b_idx}")
+        lst.insert(b_idx, x)
+    print(lst)
+
+    # test
+    for i in range(1, len(xs)):
+        b_idx = binary_search(xs, i - 1, xs[i])
+
+        tmp = xs[i]
+        print(f"xs: {xs}")
+        print(f"x: {xs[i]}, i: {i}, b_idx: {b_idx}")
+        for j in range(i, b_idx - 1, -1):
+            if j == 0:
+                break
+            xs[j] = xs[j - 1]
+            print(f"j: {j}")
+        xs[b_idx] = tmp
+        print(f"xs: {xs}")
+        print(f'== {i} ============================')
+
+
 def merge_sort(lst):
     def merge(lst, left_idx, pivot_idx, right_idx):
         left_lst = lst[left_idx:pivot_idx]
@@ -80,7 +129,6 @@ def merge_sort(lst):
         # print(left_idx, pivot_idx, right_idx)
         # print("Before: ", lst)
         merge(lst, left_idx, pivot_idx, right_idx)
-        # print("After:  ", lst)
 
 
 def quick_sort(lst):
@@ -115,6 +163,7 @@ def quick_sort(lst):
 
             sub_quick_sort(lst, left_idx, i)
             sub_quick_sort(lst, i + 1, right_idx)
+    # Function Definition Done
     sub_quick_sort(lst, 0, len(lst))
 
 
@@ -122,6 +171,7 @@ def tim_sort(lst):
     """
     2022.08.07 - frhyme - Init
     https://en.wikipedia.org/wiki/Timsort
+    https://d2.naver.com/helloworld/0315536
     """
     pass
 
@@ -151,12 +201,14 @@ if __name__ == '__main__':
     elapsed_time:  2.312e-03 seconds
     """
     print('== sorting ')
-    N = 10 ** 3
+    np.random.seed(10)
+
+    N = 10 ** 1
     lst = np.random.randint(0, 1000, N)
     lst = list(lst)
     print(lst[:10])
 
-    print("== basic sort")
+    print("== python basic sort")
     benchmark_lst = lst.copy()
     sorting_by(benchmark_lst, lambda x: x.sort())
 
@@ -191,6 +243,17 @@ if __name__ == '__main__':
     sorting_by(lst_copy, quick_sort)
     # print(lst_copy)
 
+    for x, y in zip(lst_copy, benchmark_lst):
+        if x != y:
+            print("== False")
+            break
+
+    print("== binary insertion sort")
+    lst_copy = lst.copy()
+    print(lst_copy)
+    sorting_by(lst_copy, binary_insertion_sort)
+
+    print(lst_copy)
     for x, y in zip(lst_copy, benchmark_lst):
         if x != y:
             print("== False")
