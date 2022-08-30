@@ -6,6 +6,9 @@ import numpy as np
 - fastest sort(quick sort) still 10 time slower then default sort
 why it happenend? because default python sorting algorithm is Tim Sort which means hybrid method of both insertion and merge sort
 https://en.wikipedia.org/wiki/Timsort
+
+2022.08.31 - frhyme - binary insertion sort done
+- as n increases, the computation time of binary insertion sort is much shorter than time of basic insertion time
 """
 
 
@@ -41,17 +44,18 @@ def insertion_sort(lst):
 
 def binary_insertion_sort(xs: list):
     """
-    2022.08.5
+    2022.08.30 - Done
     """
     def binary_search(lst: list, n_open: int, pivot: int) -> int:
         """
         2022.08.30 - frhyme - Init
         """
-        left, right = 0, n_open
+        left, right = 0, n_open - 1
         cursor = (left + right) // 2
 
         while left >= 0 and right >= 0 and cursor >= 0:
-            if lst[cursor] < pivot:
+            # print(f'left: {left}, cursor: {cursor}, right: {right}')
+            if lst[cursor] <= pivot:
                 # to the right
                 left = cursor + 1
                 cursor = (left + right) // 2
@@ -60,32 +64,22 @@ def binary_insertion_sort(xs: list):
                 right = cursor - 1
                 cursor = (left + right) // 2
 
-            if cursor == left or cursor == right:
-                return cursor
+            if left >= (right + 1):
+                break
+        # print(f'cursor: {cursor}')
+        return cursor + 1
     # Function Definition Done ========================
-    lst = [1, 2, 3, 8]
 
-    for x in range(1, 10):
-        b_idx = binary_search(lst, len(lst), x)
-        # print(f"b_idx of {x}: {b_idx}")
-        lst.insert(b_idx, x)
-    print(lst)
-
-    # test
     for i in range(1, len(xs)):
-        b_idx = binary_search(xs, i - 1, xs[i])
+        b_idx = binary_search(xs, i, xs[i])
 
         tmp = xs[i]
-        print(f"xs: {xs}")
-        print(f"x: {xs[i]}, i: {i}, b_idx: {b_idx}")
+
         for j in range(i, b_idx - 1, -1):
             if j == 0:
                 break
             xs[j] = xs[j - 1]
-            print(f"j: {j}")
         xs[b_idx] = tmp
-        print(f"xs: {xs}")
-        print(f'== {i} ============================')
 
 
 def merge_sort(lst):
@@ -203,7 +197,7 @@ if __name__ == '__main__':
     print('== sorting ')
     np.random.seed(10)
 
-    N = 10 ** 1
+    N = 10 ** 2
     lst = np.random.randint(0, 1000, N)
     lst = list(lst)
     print(lst[:10])
@@ -250,10 +244,10 @@ if __name__ == '__main__':
 
     print("== binary insertion sort")
     lst_copy = lst.copy()
-    print(lst_copy)
+    # print(lst_copy)
     sorting_by(lst_copy, binary_insertion_sort)
 
-    print(lst_copy)
+    # print(lst_copy)
     for x, y in zip(lst_copy, benchmark_lst):
         if x != y:
             print("== False")
